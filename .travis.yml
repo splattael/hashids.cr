@@ -1,1 +1,9 @@
 language: crystal
+crystal:
+  - latest
+
+before_script:
+  - crystal -v
+
+script:
+  - make spec

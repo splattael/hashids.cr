@@ -1,0 +1,5 @@
+#!/usr/bin/env crystal
+
+require "../src/hashids/version"
+
+print Hashids::VERSION
