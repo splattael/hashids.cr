@@ -12,6 +12,12 @@ spec:
 update:
 	shards update
 
+.PHONY: benchmarks
+benchmarks:
+	rm -f benchmarks/run
+	$(CRYSTAL_BIN) build --release benchmarks/run.cr -o benchmarks/run
+	benchmarks/run
+
 release:
 	git commit -av -e -m "Release v${VERSION}" && \
 	git tag -f v${VERSION} && \
