@@ -28,6 +28,7 @@ class Hashids
   end
 
   def decode(id : String)
+    return [] of Int32 if id.empty?
     _decode(id)
   end
 

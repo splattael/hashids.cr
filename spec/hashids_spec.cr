@@ -221,6 +221,11 @@ describe Hashids do
       id.should eq("")
     end
 
+    it "returns an empty list for empty string" do
+      numbers = Hashids.new.decode("")
+      numbers.empty?.should be_true
+    end
+
     it "returns an empty array when hex-decoding invalid id" do
       numbers = Hashids.new.decode_hex("f")
       numbers.empty?.should be_true
