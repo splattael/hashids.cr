@@ -57,13 +57,13 @@ class Hashids
     numbers_id = 0
     alphabet = @alphabet
 
-    numbers.size.times.each do |i|
+    numbers.size.times do |i|
       numbers_id += (numbers[i] % (i + 100))
     end
 
     lottery = ret = alphabet[numbers_id % alphabet.size, 1]
 
-    numbers.size.times.each do |i|
+    numbers.size.times do |i|
       number = numbers[i]
       buffer = lottery + @salt + alphabet
 
