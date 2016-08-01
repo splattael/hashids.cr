@@ -141,23 +141,22 @@ class Hashids
   private def _shuffle(alphabet, salt)
     return alphabet if salt.empty?
 
+    slice = String::Builder.new(alphabet).to_s.to_slice
+
     v = 0
     p = 0
 
-    (alphabet.size - 1).downto(1) do |i|
+    (slice.size - 1).downto(1) do |i|
       v = v % salt.size
       p += n = salt[v].ord
       j = (n + v + p) % i
 
-      tmp_char = alphabet[j]
-
-      alphabet = alphabet[0, j] + alphabet[i] + alphabet[j + 1..-1]
-      alphabet = alphabet[0, i] + tmp_char + alphabet[i + 1..-1]
+      slice[j], slice[i] = slice[i], slice[j]
 
       v += 1
     end
 
-    alphabet
+    String.new(slice)
   end
 
   private def _to_alphabet(input, alphabet)
