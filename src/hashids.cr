@@ -20,6 +20,8 @@ class Hashids
     validate!(alphabet, @min_length)
     alphabet = unique_alphabet(alphabet)
     @alphabet, @seps, @guards = setup(alphabet, DEFAULT_SEPS)
+    @guards_regex = Regex.new("[#{@guards}]")
+    @seps_regex = Regex.new("[#{@seps}]")
   end
 
   def encode(numbers : Array(Int))
@@ -112,15 +114,13 @@ class Hashids
 
     ret = [] of BigInt
     i = 0
-    id_breakdown = id.gsub(/[#{@guards}]/, " ")
-    id_array = id_breakdown.split(" ")
+    id_array = id.split(@guards_regex)
 
     i = 1 if [3, 2].includes?(id_array.size)
 
     if id_breakdown = id_array[i]
       lottery = id_breakdown[0]
-      id_breakdown = id_breakdown[1..-1].gsub(/[#{@seps}]/, " ")
-      id_array = id_breakdown.split(" ")
+      id_array = id_breakdown[1..-1].split(@seps_regex)
 
       id_array.size.times do |i|
         sub_id = id_array[i]
