@@ -45,14 +45,12 @@ class Hashids
   end
 
   def decode_hex(id : String)
-    ret = ""
-    numbers = decode(id)
-
-    numbers.size.times do |i|
-      ret += numbers[i].to_s(16)[1..-1]
+    String.build(id.bytesize) do |ret|
+      numbers = decode(id)
+      numbers.each do |number|
+        ret << number.to_s(16)[1..-1]
+      end
     end
-
-    ret
   end
 
   private def _encode(numbers)
