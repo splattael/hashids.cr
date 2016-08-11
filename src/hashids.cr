@@ -74,8 +74,8 @@ class Hashids
 
       if i + 1 < numbers.size
         number %= (last[0].ord + i)
-        sepsIndex = number % @seps.size
-        ret += @seps[sepsIndex]
+        seps_index = number % @seps.size
+        ret += @seps[seps_index]
       end
     end
 
