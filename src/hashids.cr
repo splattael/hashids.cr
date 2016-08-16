@@ -158,17 +158,15 @@ class Hashids
   end
 
   private def _to_alphabet(input, alphabet)
-    id = ""
+    id = String::Builder.new(32)
 
-    id = alphabet[input % alphabet.size] + id
-    input = input / alphabet.size
-
-    while input > 0
-      id = alphabet[input % alphabet.size] + id
+    loop do
+      id << alphabet[input % alphabet.size]
       input = input / alphabet.size
+      break if input == 0
     end
 
-    id
+    id.to_s.reverse
   end
 
   private def _from_alphabet(input, alphabet)
