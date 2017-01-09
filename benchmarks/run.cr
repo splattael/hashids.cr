@@ -32,7 +32,6 @@ def run_benchmarks(title, hex, **kwargs)
   end
 end
 
-
 run_benchmarks("simple single big int", [9007199254740991])
 run_benchmarks("deadbeef", "deadbeef")
 run_benchmarks("simple array 3", [1, 2, 3])

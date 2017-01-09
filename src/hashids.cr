@@ -8,8 +8,8 @@ class Hashids
   DEFAULT_SEPS = "cfhistuCFHISTU"
 
   DEFAULT_ALPHABET = "abcdefghijklmnopqrstuvwxyz" +
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-    "1234567890"
+                     "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+                     "1234567890"
 
   @salt : String
   @alphabet : String
@@ -195,7 +195,7 @@ class Hashids
 
     unless alphabet.size >= MIN_ALPHABET_LENGTH
       raise Exception.new "Alphabet must contain at least " +
-        "#{MIN_ALPHABET_LENGTH} unique characters."
+                          "#{MIN_ALPHABET_LENGTH} unique characters."
     end
 
     if min_length < 0
