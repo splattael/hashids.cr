@@ -139,7 +139,12 @@ class Hashids
   private def _shuffle(alphabet, salt)
     return alphabet if salt.empty?
 
-    slice = String::Builder.new(alphabet).to_s.to_slice
+    slice =
+      {% if compare_versions(Crystal::VERSION, "0.21.0") >= 0 %}
+        alphabet.to_slice.clone
+      {% else %}
+        Slice.new(String.new(alphabet.to_unsafe).to_unsafe, alphabet.bytesize)
+      {% end %}
 
     v = 0
     p = 0
