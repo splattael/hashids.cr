@@ -1,3 +1,9 @@
+# v0.2.1 - 2017-04-05
+
+### Fixed
+
+* Support Crystal `>= 0.21.0` since `String#to_slice` is read-only
+
 # v0.2.0 - 2017-01-09
 
 ### Added
