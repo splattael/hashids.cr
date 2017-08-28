@@ -15,7 +15,7 @@ update:
 .PHONY: benchmarks
 benchmarks:
 	rm -f benchmarks/run
-	$(CRYSTAL_BIN) build --release benchmarks/run.cr -o benchmarks/run
+	$(CRYSTAL_BIN) build --release --no-debug benchmarks/run.cr -o benchmarks/run
 	benchmarks/run
 
 release:
