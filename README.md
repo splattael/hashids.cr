@@ -175,4 +175,4 @@ make spec
 
 ## Contributors
 
-- [splattael](https://github.com/splattael) Peter Suschlik - creator, maintainer
+- [splattael](https://github.com/splattael) Peter Leitzen - creator, maintainer
