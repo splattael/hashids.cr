@@ -1,4 +1,5 @@
-require "big_int"
+require "big/big_int"
+require "big/lib_gmp"
 
 class Hashids
   MIN_ALPHABET_LENGTH =   16
