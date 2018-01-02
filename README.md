@@ -176,3 +176,4 @@ make spec
 ## Contributors
 
 - [splattael](https://github.com/splattael) Peter Leitzen - creator, maintainer
+- [veelenga](https://github.com/veelenga) V. Elenhaupt - contributor
