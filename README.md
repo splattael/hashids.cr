@@ -1,17 +1,17 @@
 # Hashids
 
 [![Build Status](https://travis-ci.org/splattael/hashids.cr.svg)](https://travis-ci.org/splattael/hashids.cr)
-[![Shard version](https://img.shields.io/badge/hashids.cr-v0.2.2-orange.svg)](http://crystalshards.xyz/?filter=hashids)
+[![Shard version](https://img.shields.io/badge/hashids.cr-v0.2.2-orange.svg)](https://crystalshards.xyz/?filter=hashids)
 
 A small Crystal shard to generate YouTube-like ids from one or many numbers. Use hashids when you do not want to expose your database ids to the user.
 
-http://hashids.org/crystal/
+https://hashids.org/crystal/
 
 ## What is it?
 
 hashids (Hash IDs) creates short, unique, decodable hashes from unsigned integers.
 
-See http://hashids.org for more information.
+See https://hashids.org for more information.
 
 The is a port of [Ruby's implementation](https://github.com/peterhellberg/hashids.rb).
 The tests were adopted from the original [JavaScript implementation](https://github.com/ivanakimov/hashids.js).
