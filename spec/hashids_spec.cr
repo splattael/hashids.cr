@@ -71,29 +71,29 @@ describe Hashids do
     end
   end
 
-  describe "custom min_length" do
+  describe "custom min_hash_size" do
     it "works with 0" do
-      id = test_hashids_roundtrip(min_length: 0)
+      id = test_hashids_roundtrip(min_hash_size: 0)
       id.size.should be >= 0
     end
 
     it "works with 1" do
-      id = test_hashids_roundtrip(min_length: 1)
+      id = test_hashids_roundtrip(min_hash_size: 1)
       id.size.should be >= 1
     end
 
     it "works with 10" do
-      id = test_hashids_roundtrip(min_length: 10)
+      id = test_hashids_roundtrip(min_hash_size: 10)
       id.size.should be >= 10
     end
 
     it "works with 999" do
-      id = test_hashids_roundtrip(min_length: 999)
+      id = test_hashids_roundtrip(min_hash_size: 999)
       id.size.should be >= 999
     end
 
     it "works with 1000" do
-      id = test_hashids_roundtrip(min_length: 1000)
+      id = test_hashids_roundtrip(min_hash_size: 1000)
       id.size.should be >= 1000
     end
   end
@@ -143,14 +143,14 @@ describe Hashids do
     }.each do |id, numbers|
       it "encodes #{numbers.inspect} to #{id.inspect}" do
         hashids = Hashids.new(salt: "this is my salt",
-          min_length: 30,
+          min_hash_size: 30,
           alphabet: "xzal86grmb4jhysfoqp3we7291kuct5iv0nd")
         hashids.encode(numbers).should eq(id)
       end
 
       it "decodes #{id.inspect} to #{numbers.inspect}" do
         hashids = Hashids.new(salt: "this is my salt",
-          min_length: 30,
+          min_hash_size: 30,
           alphabet: "xzal86grmb4jhysfoqp3we7291kuct5iv0nd")
         hashids.decode(id).should eq(numbers)
       end
@@ -170,14 +170,14 @@ describe Hashids do
     }.each do |id, hex|
       it "encodes 0x#{hex} to #{id.inspect}" do
         hashids = Hashids.new(salt: "this is my salt",
-          min_length: 30,
+          min_hash_size: 30,
           alphabet: "xzal86grmb4jhysfoqp3we7291kuct5iv0nd")
         hashids.encode_hex(hex).should eq(id)
       end
 
       it "decodes #{id.inspect} to 0x#{hex}" do
         hashids = Hashids.new(salt: "this is my salt",
-          min_length: 30,
+          min_hash_size: 30,
           alphabet: "xzal86grmb4jhysfoqp3we7291kuct5iv0nd")
         hashids.decode_hex(id).should eq(hex.downcase)
       end
@@ -192,14 +192,14 @@ describe Hashids do
     end
 
     it "raises an error when alphabet has spaces" do
-      expect_raises Exception, /can't include spaces/ do
+      expect_raises Exception, /include spaces/ do
         Hashids.new(alphabet: "a cdefghijklmnopqrstuvwxyz")
       end
     end
 
-    it "raises an error when min_length < 0" do
-      expect_raises Exception, /The min length must be 0 or more/ do
-        Hashids.new(min_length: -1)
+    it "raises an error when min_hash_size < 0" do
+      expect_raises Exception, /The min size must be 0 or more/ do
+        Hashids.new(min_hash_size: -1)
       end
     end
 
