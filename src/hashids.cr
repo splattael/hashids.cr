@@ -83,7 +83,7 @@ class Hashids
     array[0, index] + " " + array[index + 1..-1]
   end
 
-  private def consistent_shuffle(alphabet, salt)
+  protected def consistent_shuffle(alphabet, salt)
     return alphabet if salt.nil? || salt.empty?
 
     chars = alphabet.each_char.to_a
@@ -174,7 +174,7 @@ class Hashids
     ret
   end
 
-  private def hash(input, alphabet)
+  protected def hash(input, alphabet)
     num = input.to_i64
     len = alphabet.size
     res = ""
@@ -210,7 +210,7 @@ class Hashids
     internal_decode(hash, @alphabet)
   end
 
-  def internal_decode(hash : String, alphabet : String) : Array(Int64)
+  protected def internal_decode(hash : String, alphabet : String) : Array(Int64)
     ret = [] of Int64
 
     breakdown = hash.tr(@guards, " ")
@@ -239,7 +239,7 @@ class Hashids
     ret
   end
 
-  def unhash(input : String, alphabet : String)
+  protected def unhash(input : String, alphabet : String)
     num : Int64 = 0
 
     input.size.times do |i|
