@@ -2,6 +2,8 @@ name: hashids
 version: 0.2.2
 
 authors:
-  - Peter Leitzen <pl@neopoly.de>
+  - Peter Leitzen <peter@leitzen.de>
 
 license: MIT
+
+crystal: 0.33.0

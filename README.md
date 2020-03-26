@@ -177,3 +177,4 @@ make spec
 
 - [splattael](https://github.com/splattael) Peter Leitzen - creator, maintainer
 - [veelenga](https://github.com/veelenga) V. Elenhaupt - contributor
+- [bdtomlin](https://github.com/bdtomlin) Bryan Tomlin - contributor
