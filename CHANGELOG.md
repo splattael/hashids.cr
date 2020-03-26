@@ -1,8 +1,15 @@
+# v0.3.0 - 2020-03-26
+
+### Fixed
+
+* Support Crystal `>= 0.33.0` (@bdtomlin)
+* Make Crystal port close to Ruby version (@bdtomlin)
+
 # v0.2.2 - 2018-01-01
 
 ### Fixed
 
-* Support Crystal `>= 0.24.1`
+* Support Crystal `>= 0.24.1` (@veelenga)
 
 # v0.2.1 - 2017-04-05
 

@@ -1,7 +1,7 @@
 # Hashids
 
 [![Build Status](https://travis-ci.org/splattael/hashids.cr.svg)](https://travis-ci.org/splattael/hashids.cr)
-[![Shard version](https://img.shields.io/badge/hashids.cr-v0.2.2-orange.svg)](https://crystalshards.xyz/?filter=hashids)
+[![Shard version](https://img.shields.io/badge/hashids.cr-v0.3.0-orange.svg)](https://crystalshards.xyz/?filter=hashids)
 
 A small Crystal shard to generate YouTube-like ids from one or many numbers. Use hashids when you do not want to expose your database ids to the user.
 
@@ -24,7 +24,7 @@ Add this to your application's `shard.yml`:
 dependencies:
   hashids:
     github: splattael/hashids.cr
-    version: 0.2.2
+    version: 0.3.0
 ```
 
 ## Usage
@@ -171,6 +171,7 @@ make spec
 * Commit all changes
 * Bump version in `src/hashids/version.cr`
 * Adjust version in `README.md` and `shard.yml`
+* Add entries in `CHANGELOG.md`
 * `make release`
 
 ## Contributors
