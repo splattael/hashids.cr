@@ -2,9 +2,11 @@ require "big/big_int"
 require "big/lib_gmp"
 
 class Hashids
-  MIN_ALPHABET_LENGTH =   16
-  SEP_DIV             =  3.5
-  GUARD_DIV           = 12.0
+  VERSION = "1.0.5"
+
+  MIN_ALPHABET_SIZE =   16
+  SEP_DIV           =  3.5
+  GUARD_DIV         = 12.0
 
   DEFAULT_SEPS = "cfhistuCFHISTU"
 
@@ -13,28 +15,182 @@ class Hashids
                      "1234567890"
 
   @salt : String
+  @min_hash_size : Int32
   @alphabet : String
-  @seps : String
-  @guards : String
+  @seps : String = DEFAULT_SEPS
+  @guards : String = ""
+  getter :salt, :min_hash_size, :alphabet, :seps, :guards
 
-  def initialize(@salt = "", @min_length = 0, alphabet = DEFAULT_ALPHABET)
-    validate!(alphabet, @min_length)
-    alphabet = unique_alphabet(alphabet)
-    @alphabet, @seps, @guards = setup(alphabet, DEFAULT_SEPS)
-    @guards_regex = Regex.new("[#{@guards}]")
-    @seps_regex = Regex.new("[#{@seps}]")
+  def initialize(@salt = "", @min_hash_size = 0, @alphabet = DEFAULT_ALPHABET)
+    setup_alphabet
   end
 
+  #########
+  # SETUP #
+  #########
+  private def setup_alphabet
+    raise "The min size must be 0 or more" unless min_hash_size >= 0
+    raise "The alphabet can’t include spaces" if alphabet.includes?(" ")
+
+    @alphabet = @alphabet.split("").uniq.join("")
+
+    validate_alphabet
+    setup_seps
+    setup_guards
+  end
+
+  private def validate_alphabet
+    unless alphabet.size >= MIN_ALPHABET_SIZE
+      raise "Alphabet must contain at least #{MIN_ALPHABET_SIZE} unique characters."
+    end
+  end
+
+  private def setup_seps
+    @seps = DEFAULT_SEPS
+
+    seps.size.times do |i|
+      # Seps should only contain characters present in alphabet,
+      # and alphabet should not contains seps
+      if j = alphabet.index(seps[i])
+        @alphabet = pick_characters(alphabet, j)
+      else
+        @seps = pick_characters(seps, i)
+      end
+    end
+
+    @alphabet = @alphabet.delete(" ")
+    @seps = @seps.delete(" ")
+
+    @seps = consistent_shuffle(seps, salt)
+
+    if seps.size == 0 || (alphabet.size / seps.size.to_f) > SEP_DIV
+      seps_size = (alphabet.size / SEP_DIV).ceil
+      seps_size = 2 if seps_size == 1
+
+      if seps_size > seps.size
+        diff = (seps_size - seps.size).to_i64
+        @seps += alphabet[0, diff]
+        @alphabet = alphabet[diff..-1]
+      else
+        @seps = seps[0, seps_size.to_i64]
+      end
+    end
+
+    @alphabet = consistent_shuffle(alphabet, salt)
+  end
+
+  private def pick_characters(array, index)
+    array[0, index] + " " + array[index + 1..-1]
+  end
+
+  protected def consistent_shuffle(alphabet, salt)
+    return alphabet if salt.nil? || salt.empty?
+
+    chars = alphabet.each_char.to_a
+    salt_ords = salt.codepoints
+    salt_size = salt_ords.size
+    idx = ord_total = 0
+
+    (alphabet.size - 1).downto(1) do |i|
+      ord_total += n = salt_ords[idx]
+      j = (n + idx + ord_total) % i
+
+      chars[i], chars[j] = chars[j], chars[i]
+
+      idx = (idx + 1) % salt_size
+    end
+
+    chars.join
+  end
+
+  private def setup_guards
+    gc = (alphabet.size / GUARD_DIV).ceil.to_i64
+
+    if alphabet.size < 3
+      @guards = seps[0, gc]
+      @seps = seps[gc..-1]
+    else
+      @guards = alphabet[0, gc]
+      @alphabet = alphabet[gc..-1]
+    end
+  end
+
+  ##########
+  # Encode #
+  ##########
   def encode(numbers : Array(Int))
-    return "" if numbers.empty? || numbers.any? &.< 0
-    _encode(numbers)
+    numbers = numbers.flatten if numbers.size == 1
+    return "" if numbers.empty? || numbers.any? { |n| n < 0 }
+    internal_encode(numbers)
   end
 
-  def decode(id : String)
-    return [] of Int32 if id.empty?
-    _decode(id)
+  protected def internal_encode(numbers : Array(Int))
+    ret = ""
+
+    alphabet = @alphabet
+    size = numbers.size
+    hash_int = 0
+
+    size.times do |i|
+      hash_int += (numbers[i] % (i + 100))
+    end
+
+    lottery = ret = alphabet[hash_int % alphabet.size]
+
+    size.times do |i|
+      num = numbers[i]
+      buf = lottery + salt + alphabet
+
+      alphabet = consistent_shuffle(alphabet, buf[0, alphabet.size])
+      last = hash(num, alphabet)
+
+      ret += last
+
+      if (i + 1) < size
+        num %= (last[0].ord + i)
+        ret += seps[num % seps.size]
+      end
+    end
+    ret = ret.to_s
+
+    if ret.size < min_hash_size
+      ret = guards[(hash_int + ret[0].ord) % guards.size] + ret
+
+      if ret.size < min_hash_size
+        ret += guards[(hash_int + ret[2].ord) % guards.size]
+      end
+    end
+
+    half_size = alphabet.size.tdiv(2)
+
+    while (ret.size < min_hash_size)
+      alphabet = consistent_shuffle(alphabet, alphabet)
+      ret = alphabet[half_size..-1] + ret + alphabet[0, half_size]
+
+      excess = ret.size - min_hash_size
+      ret = ret[(excess / 2).to_i64, min_hash_size] if excess > 0
+    end
+
+    ret
   end
 
+  protected def hash(input, alphabet)
+    num = input.to_i64
+    len = alphabet.size
+    res = ""
+
+    loop do
+      res = "#{alphabet[num % len]}#{res}"
+      num = num.tdiv(alphabet.size)
+      break if num == 0
+    end
+
+    res
+  end
+
+  ##############
+  # Encode Hex #
+  ##############
   def encode_hex(hex : String)
     return "" unless hex.match(/\A[0-9a-fA-F]+\z/)
 
@@ -45,6 +201,61 @@ class Hashids
     encode(numbers)
   end
 
+  ##########
+  # Decode #
+  ##########
+  def decode(hash : String) : Array(Int64)
+    return [] of Int64 if hash.nil? || hash.empty?
+
+    internal_decode(hash, @alphabet)
+  end
+
+  protected def internal_decode(hash : String, alphabet : String) : Array(Int64)
+    ret = [] of Int64
+
+    breakdown = hash.tr(@guards, " ")
+    array = breakdown.split(" ")
+
+    i = [3, 2].includes?(array.size) ? 1 : 0
+
+    if breakdown = array[i]
+      lottery = breakdown[0]
+      breakdown = breakdown[1..-1].tr(@seps, " ")
+      array = breakdown.split(" ")
+
+      array.size.times do |time|
+        sub_hash : String = array[time]
+        buffer : String = lottery + salt + alphabet
+        alphabet = consistent_shuffle(alphabet, buffer[0, alphabet.size])
+
+        ret.push unhash(sub_hash, alphabet)
+      end
+
+      if encode(ret) != hash
+        ret = [] of Int64
+      end
+    end
+
+    ret
+  end
+
+  protected def unhash(input : String, alphabet : String)
+    num : Int64 = 0
+
+    input.size.times do |i|
+      pos : Int64? = alphabet.index(input[i]).try &.to_i64
+
+      raise "unable to unhash" unless pos
+
+      num += pos * alphabet.size.to_i64 ** (input.size - i - 1).to_i64
+    end
+
+    num
+  end
+
+  ##############
+  # Decode Hex #
+  ##############
   def decode_hex(id : String)
     String.build(id.bytesize) do |ret|
       numbers = decode(id)
@@ -52,214 +263,5 @@ class Hashids
         ret << number.to_s(16)[1..-1]
       end
     end
-  end
-
-  private def _encode(numbers)
-    numbers_id = 0
-    alphabet = @alphabet
-
-    numbers.size.times do |i|
-      numbers_id += (numbers[i] % (i + 100))
-    end
-
-    lottery = ret = alphabet[numbers_id % alphabet.size, 1]
-
-    numbers.size.times do |i|
-      number = numbers[i]
-      buffer = lottery + @salt + alphabet
-
-      alphabet = _shuffle(alphabet, buffer[0, alphabet.size])
-      last = _to_alphabet(number, alphabet)
-
-      ret += last
-
-      if i + 1 < numbers.size
-        number %= (last[0].ord + i)
-        seps_index = number % @seps.size
-        ret += @seps[seps_index]
-      end
-    end
-
-    if ret.size < @min_length
-      guard_index = (numbers_id + ret[0].ord) % @guards.size
-      guard = @guards[guard_index]
-
-      ret = guard + ret
-
-      if ret.size < @min_length
-        guard_index = (numbers_id + ret[2].ord) % @guards.size
-        guard = @guards[guard_index]
-        ret += guard
-      end
-    end
-
-    half_length = alphabet.size / 2
-    while ret.size < @min_length
-      alphabet = _shuffle(alphabet, alphabet)
-      ret = alphabet[half_length..-1] + ret + alphabet[0, half_length]
-
-      excess = ret.size - @min_length
-      if excess > 0
-        ret = ret[excess / 2, @min_length]
-      end
-    end
-
-    ret
-  end
-
-  private def _decode(id)
-    salt = @salt
-    alphabet = @alphabet
-
-    ret = [] of BigInt
-    i = 0
-    id_array = id.split(@guards_regex)
-
-    i = 1 if [3, 2].includes?(id_array.size)
-
-    if id_breakdown = id_array[i]
-      lottery = id_breakdown[0]
-      id_array = id_breakdown[1..-1].split(@seps_regex)
-
-      id_array.size.times do |i|
-        sub_id = id_array[i]
-        buffer = lottery + salt + alphabet
-        alphabet = _shuffle(alphabet, buffer[0, alphabet.size])
-
-        ret.push _from_alphabet(sub_id, alphabet)
-      end
-
-      if encode(ret) != id
-        ret = [] of BigInt
-      end
-    end
-
-    return ret
-  end
-
-  private def _shuffle(alphabet, salt)
-    return alphabet if salt.empty?
-
-    slice =
-      {% if compare_versions(Crystal::VERSION, "0.21.0") >= 0 %}
-        alphabet.to_slice.clone
-      {% else %}
-        Slice.new(String.new(alphabet.to_unsafe).to_unsafe, alphabet.bytesize)
-      {% end %}
-
-    v = 0
-    p = 0
-
-    (slice.size - 1).downto(1) do |i|
-      v = v % salt.size
-      p += n = salt[v].ord
-      j = (n + v + p) % i
-
-      slice[j], slice[i] = slice[i], slice[j]
-
-      v += 1
-    end
-
-    String.new(slice)
-  end
-
-  private def _to_alphabet(input, alphabet)
-    id = String::Builder.new(32)
-
-    loop do
-      id << alphabet[input % alphabet.size]
-      input = input / alphabet.size
-      break if input == 0
-    end
-
-    id.to_s.reverse
-  end
-
-  private def _from_alphabet(input, alphabet)
-    num = BigInt.new(0)
-    alphabet_size = BigInt.new(alphabet.size)
-
-    input.size.times do |i|
-      pos = alphabet.index(input[i])
-
-      raise Exception.new "unable to unhash" unless pos
-
-      num += pos * alphabet_size ** (input.size - i - 1)
-    end
-
-    num
-  end
-
-  private def unique_alphabet(alphabet)
-    alphabet.split("").uniq.join("")
-  end
-
-  private def validate!(alphabet, min_length)
-    if alphabet.includes?(' ')
-      raise Exception.new "The alphabet can't include spaces"
-    end
-
-    unless alphabet.size >= MIN_ALPHABET_LENGTH
-      raise Exception.new "Alphabet must contain at least " +
-                          "#{MIN_ALPHABET_LENGTH} unique characters."
-    end
-
-    if min_length < 0
-      raise Exception.new "The min length must be 0 or more"
-    end
-  end
-
-  private def setup(alphabet, seps)
-    alphabet, seps = setup_seps(alphabet, seps)
-    setup_guards(alphabet, seps)
-  end
-
-  private def setup_seps(alphabet, seps)
-    seps.size.times do |i|
-      # Seps should only contain characters present in alphabet,
-      # and alphabet should not contains seps
-      if j = alphabet.index(seps[i])
-        alphabet = pick_characters(alphabet, j)
-      else
-        seps = pick_characters(seps, i)
-      end
-    end
-
-    alphabet = alphabet.delete(' ')
-    seps = seps.delete(' ')
-
-    seps = _shuffle(seps, @salt)
-
-    if seps.size == 0 || (alphabet.size / seps.size.to_f) > SEP_DIV
-      seps_length = (alphabet.size / SEP_DIV).ceil.to_big_i
-      seps_length = 2 if seps_length == 1
-
-      if seps_length > seps.size
-        diff = (seps_length - seps.size).to_big_i
-
-        seps += alphabet[0, diff]
-        alphabet = alphabet[diff..-1]
-      else
-        seps = seps[0, seps_length]
-      end
-    end
-
-    alphabet = _shuffle(alphabet, @salt)
-
-    {alphabet, seps}
-  end
-
-  private def setup_guards(alphabet, seps)
-    gc = (alphabet.size / GUARD_DIV).ceil.to_big_i
-
-    if alphabet.size < 3
-      {alphabet, seps[gc..-1], seps[0, gc]}
-    else
-      {alphabet[gc..-1], seps, alphabet[0, gc]}
-    end
-  end
-
-  def pick_characters(array, index)
-    array[0, index] + " " + array[index + 1..-1]
   end
 end
