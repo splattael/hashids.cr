@@ -84,14 +84,14 @@ Here we encode integer 1, and set the minimum hash length to **8**
 (by default it's **0** -- meaning hashes will be the shortest possible length).
 
 ```crystal
-hashids = Hashids.new(salt: "this is my salt", min_length: 8)
+hashids = Hashids.new(salt: "this is my salt", min_hash_size: 8)
 hash = hashids.encode([1]) # => gB0NV05e
 ```
 
 ### Decoding with minimum hash length
 
 ```crystal
-hashids = Hashids.new(salt: "this is my salt", min_length: 8)
+hashids = Hashids.new(salt: "this is my salt", min_hash_size: 8)
 numbers = hashids.decode("gB0NV05e") # => [1]
 ```
 
