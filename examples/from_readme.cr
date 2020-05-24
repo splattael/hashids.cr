@@ -18,10 +18,10 @@ pp hash = hashids.encode([683, 94108, 123, 5]) # => aBMswoO2UB3Sj
 hashids = Hashids.new(salt: "this is my salt")
 pp numbers = hashids.decode("aBMswoO2UB3Sj") # => [683, 94108, 123, 5]
 
-hashids = Hashids.new(salt: "this is my salt", min_length: 8)
+hashids = Hashids.new(salt: "this is my salt", min_hash_size: 8)
 pp hash = hashids.encode([1]) # => gB0NV05e
 
-hashids = Hashids.new(salt: "this is my salt", min_length: 8)
+hashids = Hashids.new(salt: "this is my salt", min_hash_size: 8)
 pp numbers = hashids.decode("gB0NV05e") # => [1]
 
 hashids = Hashids.new(salt: "this is my salt", alphabet: "abcdefghijkABCDEFGHIJK12345")
